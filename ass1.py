@@ -4,6 +4,7 @@ from pprint import pprint
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 data = []
 nodes = set()
@@ -95,8 +96,70 @@ for i in nodes:
   else:
     clust_coeffs.append(neighbor_link_count/((degrees[i-1]*(degrees[i-1]-1))/2))
 clust_coeff =  np.mean(clust_coeffs)
+assert(math.isclose(clust_coeff,nx.average_clustering(G)))
 print("clust_coeff", clust_coeff)
 
 #5
-set_trace()
+hopmatrix = np.zeros((num_nodes,num_nodes))
+calc_hops = False
+if calc_hops:
+  for i in nodes:
+    for j in nodes:
+      if j < i:
+        hopmatrix[i-1,j-1] = hopmatrix[j-1,i-1]
+        continue
+      if i == j:
+        hopmatrix[i-1,j-1] = 0
+        continue
+      hopcount = 1
+      neighbors = set(map(lambda y: y[1], filter(lambda x: x[0] == i, links)))
+      neighbors = neighbors.union(set(map(lambda y: y[0], filter(lambda x: x[1] == i, links))))
+      
+      neighbor_found = False
+      while not neighbor_found:
+        if j in neighbors:
+          hopmatrix[i-1,j-1] = hopcount
+          neighbor_found = True
+        tmp_neighbors = neighbors.union(set(map(lambda y: y[1], filter(lambda x: x[0] in neighbors, links))))
+        neighbors = tmp_neighbors.union(set(map(lambda y: y[0], filter(lambda x: x[1] in neighbors, links))))
+        hopcount += 1
+      #print(i,j,hopcount,hopmatrix[i-1,j-1], nx.shortest_path_length(G,source=i,target=j))
+      assert(hopmatrix[i-1,j-1] == nx.shortest_path_length(G,source=i,target=j))
+    print(i)
+  print('hopmatrix ready')
+
+  avg_hop = np.sum(hopmatrix)/(167*166)
+  assert(avg_hop == nx.average_shortest_path_length(G))
+  print("avg_hop", avg_hop)
+  diameter = np.max(hopmatrix)
+  print("diameter", diameter)
+
+rand_clust_coeffs = []
+rand_shortest_paths = []
+
+#6
+calc_small_world = False
+if calc_small_world:
+  sigma = nx.sigma(G,1,1) # == 0.99017 ~ 1
+  print("sigma", sigma)
+
+  omega = nx.omega(G,1,1) # == -0.07 ~ SO NOT SMALL WORLD?
+  print("omega", omega)
+
+#7
+largest_eigen = max(np.linalg.eig(adjacency)[0])
+print("largest_eigen", largest_eigen)
+assert(math.isclose(largest_eigen, max(nx.adjacency_spectrum(G))))
+
+#8
+degrees_diagonal = np.zeros((num_nodes,num_nodes))
+np.fill_diagonal(degrees_diagonal, degrees)
+laplacian = degrees_diagonal - adjacency
+laplacian_eigens = np.linalg.eig(laplacian)[0]
+second_biggest = sorted(laplacian_eigens)[-2]
+print("second_biggest", second_biggest)
+assert(math.isclose(second_biggest,sorted(nx.laplacian_spectrum(G))[-2]))
+
+
 # 13: timestamps that every node gets infected by i for the first 80%
+# 
