@@ -59,7 +59,7 @@ ax.plot(degree_x, degree_y)
 ax.set(xlabel='degree k', ylabel='P[D=k]',
        title='Degree distribution')
 ax.grid()
-#plt.show()
+plt.show()
 # SCALE FREE since the degree distribution should follow a more normal distribution for ER.
 
 #3
@@ -125,7 +125,6 @@ if calc_hops:
         hopcount += 1
       #print(i,j,hopcount,hopmatrix[i-1,j-1], nx.shortest_path_length(G,source=i,target=j))
       assert(hopmatrix[i-1,j-1] == nx.shortest_path_length(G,source=i,target=j))
-    print(i)
   print('hopmatrix ready')
 
   avg_hop = np.sum(hopmatrix)/(167*166)
@@ -156,10 +155,6 @@ degrees_diagonal = np.zeros((num_nodes,num_nodes))
 np.fill_diagonal(degrees_diagonal, degrees)
 laplacian = degrees_diagonal - adjacency
 laplacian_eigens = np.linalg.eig(laplacian)[0]
-second_biggest = sorted(laplacian_eigens)[-2]
-print("second_biggest", second_biggest)
-assert(math.isclose(second_biggest,sorted(nx.laplacian_spectrum(G))[-2]))
-
-
-# 13: timestamps that every node gets infected by i for the first 80%
-# 
+second_smallest = sorted(laplacian_eigens)[1]
+print("second_smallest", second_smallest)
+assert(math.isclose(second_smallest,sorted(nx.laplacian_spectrum(G))[1]))
