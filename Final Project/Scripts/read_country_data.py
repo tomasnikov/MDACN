@@ -3,7 +3,7 @@ from pprint import pprint
 from bs4 import BeautifulSoup as Soup, Comment
 import random
 
-file = open('supplementalData.xml').read()
+file = open('../Data/supplementalData.xml').read()
 soup = Soup(file, 'lxml')
 countries = {}
 for territory in soup.find_all('territory'):
