@@ -53,7 +53,7 @@ print('standard dev degrees', np.var(degrees))
 degree_x = np.arange(1,max(degrees)+1)
 degree_y = [0]*(max(degrees))
 for i in range(max(degrees)):
-  degree_y[i] = degrees.count(i+1)
+  degree_y[i] = degrees.count(i+1)/num_nodes
 fig, ax = plt.subplots()
 ax.plot(degree_x, degree_y)
 ax.set(xlabel='degree k', ylabel='P[D=k]',
@@ -61,6 +61,8 @@ ax.set(xlabel='degree k', ylabel='P[D=k]',
 ax.grid()
 plt.show()
 # SCALE FREE since the degree distribution should follow a more normal distribution for ER.
+# 
+set_trace()
 
 #3
 adjacency = np.zeros((num_nodes,num_nodes))
