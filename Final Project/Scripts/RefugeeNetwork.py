@@ -5,19 +5,18 @@ tree = ET.parse('..\data\RefugeeData.xml')
 RefugeeXML = tree.getroot()
 
 
-data = []
-countRoot = 1
+dataMatrix = []
 for root in RefugeeXML:
-    if countRoot<2:
-        for  info in root:
-            row =[]
-            count = 0
-            for field in info:
-                if count <4:    
-                    row.append(field.text)
-                    count+=1
-            data.append(row) 
-        countRoot+=1 
+    data =RefugeeXML.find('data')
+    for  record in data:
+        row =[]
+        count = 0
+        for field in record:
+            if count <4:    
+                row.append(field.text)
+                count+=1
+        dataMatrix.append(row) 
+
 
 print(count)
 set_trace()
