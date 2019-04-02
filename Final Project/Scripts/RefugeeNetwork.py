@@ -5,6 +5,7 @@ import pandas
 
 tree = ET.parse('../data/RefugeeData.xml')
 RefugeeXML = tree.getroot()
+np.set_printoptions(suppress=True)
 
 
 dataMatrix = []
@@ -50,29 +51,21 @@ linkNames = []
 
 
 countyear = -1
-years =["2016"]
+
 adjacency = np.zeros((numCountries,numCountries))
+#counter =0
+#for country in nodes:
+#        counter +1
+#        adjacency[1,counter] = country
+#        adjacency[counter,1] = country
+
+countinsert = 0
 for year in years:
         countyear+=1
-        '''
-        onlyNew =list(filter(lambda x:x['Year']==year,dataObject))
-        for i,country in enumerate(nodes):
-                for j,otherCountry in enumerate(nodes):
-                        if i !=j:
-                                i_relevant =list(filter(lambda x:x['Residence']==nodes[i],onlyNew))
-                                j_relevant =list(filter(lambda x:x['Origin']==nodes[j],i_relevant))
-                                if j_relevant != []:
-                                
-                                        adjacency[i,j] = j_relevant[0]['Count']
+        relevantYear =list(filter(lambda x:x['Year']==year,dataObject)))
+        for data in relevantYear:
+                adjacency[nodes.index(data['Residence']),nodes.index(data['Origin'])] = data['Count']
 
-        '''
-        for i,country in enumerate(nodes):
-                for j,otherCountry in enumerate(nodes):
-                        if i !=j:
-                                
-                                #relevant = list(filter(lambda x:(x['Residence']==nodes[i])&(x['Residence']==nodes[j])&(x['Year']==year),dataObject))  
-                                relevant = list(filter(lambda x:(x['Year']==year)&(x['Residence']==nodes[i])&(x['Origin']==nodes[j]),dataObject))
-                                if relevant != []:
-                                        adjacency[i,j] = relevant[0]['Count']
-                                        
-np.savetxt("RefugeeAdjacency.csv", adjacency, delimiter=",")
+   
+        filename = "RefugeeAdjacency"+str(year)+".csv"                             
+        np.savetxt(filename, adjacency, fmt='%.0f',delimiter=",")
