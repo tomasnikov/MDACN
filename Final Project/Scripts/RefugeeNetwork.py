@@ -42,8 +42,8 @@ for data in dataMatrix:
 numCountries = len(allCountries)
 
 allCountries.sort()
-df = pandas.DataFrame(data={"Countries": allCountries})
-df.to_csv("./RefugeeCountries.csv", sep=',',index=False)
+#df = pandas.DataFrame(data={"Countries": allCountries})
+#df.to_csv("./RefugeeCountries.csv", sep=',',index=False)
 nodes = allCountries
 linkIndices = []
 linkNames = []
