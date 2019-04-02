@@ -3,7 +3,7 @@ from pdb import set_trace
 import numpy as np
 import pandas
 
-tree = ET.parse('..\data\RefugeeData.xml')
+tree = ET.parse('../data/RefugeeData.xml')
 RefugeeXML = tree.getroot()
 
 
@@ -47,7 +47,7 @@ df.to_csv("./RefugeeCountries.csv", sep=',',index=False)
 nodes = allCountries
 linkIndices = []
 linkNames = []
-set_trace()
+
 
 countyear = -1
 years =["2016"]
