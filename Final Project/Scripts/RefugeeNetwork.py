@@ -32,6 +32,8 @@ for data in dataMatrix:
         'Year':data[2],
         'Count':data[3]
         }
+        if entry['Origin'] in ['Tibetans', 'Stateless', 'Various'] or entry['Residence'] in ['Tibetans', 'Stateless', 'Various']:
+            continue
         if entry['Count'] == None:
             entry['Count'] = 0
         dataObject.append(entry)
@@ -70,5 +72,5 @@ for year in years:
 
 
         directory = "../Data/RefugeeMatrices/"
-        filename = directory+"RefugeeAdjacency"+str(year)+".csv"                             
+        filename = directory+"RefugeeAdjacency"+str(year)+".csv"
         np.savetxt(filename, adjacency, fmt='%.0f',delimiter=",")
