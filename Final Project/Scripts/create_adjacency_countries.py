@@ -65,7 +65,7 @@ for i,country in enumerate(countries):
       linkIndices.append((i, j))
       linkNames.append((country['name'], otherCountry['name'], 1))
 
-#np.savetxt("CountryAdjacency.csv", adjacency)
+np.savetxt("../Data/CountryAdjacency.csv", adjacency)
 print(adjacency)
 
 print('Num links: ', len(linkNames))

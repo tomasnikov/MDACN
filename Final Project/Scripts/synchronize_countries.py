@@ -37,4 +37,4 @@ for i in range(0, len(refNames)):
             adjacency[i, j] = 0
 
 print(adjacency)
-np.savetxt("CountryAdjacencyNew.csv", adjacency, delimiter=',')
+np.savetxt("../Data/CountryAdjacencyNew.csv", adjacency, delimiter=',')
