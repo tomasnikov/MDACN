@@ -32,6 +32,8 @@ for data in dataMatrix:
         'Year':data[2],
         'Count':data[3]
         }
+        if entry['Count'] == None:
+            entry['Count'] = 0
         dataObject.append(entry)
         years.add(entry['Year'])
         if entry['Residence'] not in allCountries:
@@ -62,10 +64,11 @@ adjacency = np.zeros((numCountries,numCountries))
 countinsert = 0
 for year in years:
         countyear+=1
-        relevantYear =list(filter(lambda x:x['Year']==year,dataObject)))
+        relevantYear =list(filter(lambda x:x['Year']==year,dataObject))
         for data in relevantYear:
                 adjacency[nodes.index(data['Residence']),nodes.index(data['Origin'])] = data['Count']
 
-   
-        filename = "RefugeeAdjacency"+str(year)+".csv"                             
+
+        directory = "../Data/RefugeeMatrices/"
+        filename = directory+"RefugeeAdjacency"+str(year)+".csv"                             
         np.savetxt(filename, adjacency, fmt='%.0f',delimiter=",")
