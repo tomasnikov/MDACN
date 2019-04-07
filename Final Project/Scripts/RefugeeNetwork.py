@@ -56,7 +56,7 @@ linkNames = []
 
 countyear = -1
 
-adjacency = np.zeros((numCountries,numCountries))
+#adjacency = np.zeros((numCountries,numCountries))
 #counter =0
 #for country in nodes:
 #        counter +1
@@ -65,6 +65,7 @@ adjacency = np.zeros((numCountries,numCountries))
 
 countinsert = 0
 for year in years:
+        adjacency = np.zeros((numCountries,numCountries))
         countyear+=1
         relevantYear =list(filter(lambda x:x['Year']==year,dataObject))
         for data in relevantYear:
