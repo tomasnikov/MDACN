@@ -47,16 +47,16 @@ for i,country in enumerate(countries):
   for j,otherCountry in enumerate(countries):
     if i != j:
       totalAdjacency = 0
-
+      normalization = 0
       for lang1 in country['languages']:
         for lang2 in otherCountry['languages']:
           if lang1['name'] in languageNames and lang2['name'] in languageNames:
             adjacencyValue = languageSimilarities.item((languageNames.index(lang1['name']),languageNames.index(lang2['name'])))
             adjacencyValue = adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
             totalAdjacency += adjacencyValue
-      if totalAdjacency > 1:
-        totalAdjacency = 1
-
+            normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
+      if normalization != 0:
+        totalAdjacency /= normalization
       adjacency[i, j] = totalAdjacency
       linkIndices.append((i, j))
       linkNames.append((country['name'], otherCountry['name'], totalAdjacency))
