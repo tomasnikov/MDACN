@@ -51,10 +51,15 @@ for i,country in enumerate(countries):
       for lang1 in country['languages']:
         for lang2 in otherCountry['languages']:
           if lang1['name'] in languageNames and lang2['name'] in languageNames:
-            adjacencyValue = languageSimilarities.item((languageNames.index(lang1['name']),languageNames.index(lang2['name'])))
-            adjacencyValue = adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
-            totalAdjacency += adjacencyValue
-            normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
+            if (lang1['officialStatus'] == 'official' and lang2['officialStatus'] == 'official') or \
+                    (lang1['officialStatus'] == 'de_facto_official' and lang2['officialStatus'] == 'de_facto_official') or \
+                    (lang1['officialStatus'] == 'official' and lang2['officialStatus'] == 'de_facto_official') or \
+                    (lang1['officialStatus'] == 'de_facto_official' and lang2['officialStatus'] == 'official'):
+
+              adjacencyValue = languageSimilarities.item((languageNames.index(lang1['name']),languageNames.index(lang2['name'])))
+              adjacencyValue = adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
+              totalAdjacency += adjacencyValue
+              normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
       if normalization != 0:
         totalAdjacency /= normalization
       adjacency[i, j] = totalAdjacency
