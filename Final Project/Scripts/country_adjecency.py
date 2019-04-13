@@ -32,6 +32,7 @@ adjacency = np.zeros((numCountries,numCountries))
 languageSimilarities = genfromtxt('../Data/LanguageSimilarities.csv', delimiter=',')
 with open ('../Data/LanguageNames.csv', 'r') as file:
   languageNames = file.read().splitlines()
+meanLangSim = languageSimilarities.mean()
 
 for i,country in enumerate(countries):
   for j,otherCountry in enumerate(countries):
@@ -41,16 +42,12 @@ for i,country in enumerate(countries):
       for lang1 in country['languages']:
         for lang2 in otherCountry['languages']:
           if lang1['name'] in languageNames and lang2['name'] in languageNames:
-            if (lang1['officialStatus'] == 'official' and lang2['officialStatus'] == 'official') or \
-                    (lang1['officialStatus'] == 'de_facto_official' and lang2['officialStatus'] == 'de_facto_official') or \
-                    (lang1['officialStatus'] == 'official' and lang2['officialStatus'] == 'de_facto_official') or \
-                    (lang1['officialStatus'] == 'de_facto_official' and lang2['officialStatus'] == 'official'):
-
               adjacencyValue = languageSimilarities.item((languageNames.index(lang1['name']),languageNames.index(lang2['name'])))
-              adjacencyValue = adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
-              totalAdjacency += adjacencyValue
-              normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
-      if normalization != 0:
+              totalAdjacency += adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
+          else:
+              totalAdjacency += meanLangSim * (lang1['percent']/100) * (lang2['percent']/100)
+          normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
+      if normalization > 1:
         totalAdjacency /= normalization
       adjacency[i, j] = totalAdjacency
     else:
