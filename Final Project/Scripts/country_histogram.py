@@ -3,10 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from pprint import pprint
+from pdb import set_trace
+
+year = '2016'
 
 country_adj = pd.read_csv('../Data/CountryAdjacency.csv', header=None)
 country_names = pd.read_csv('../Data/RefugeeCountries.csv', header=None)
-refugee_adj = pd.read_csv('../Data/RefugeeMatrices/RefugeeAdjacency2016.csv', header=None,dtype=int)   
+refugee_adj = pd.read_csv('../Data/RefugeeMatrices/RefugeeAdjacency%s.csv' % year, header=None,dtype=int)   
 country_adj = pd.DataFrame(country_adj).to_numpy()
 refugee_adj = pd.DataFrame(refugee_adj).to_numpy()
 refugee_adj_copy = refugee_adj.copy()
@@ -15,15 +18,18 @@ refugee_adj_copy = refugee_adj.copy()
 def create_bins(ref_matrix):
   x = np.linspace(0.05,1.0,20)
   y = np.zeros(20)
+  total = 0
 
   for i in range(0,len(country_adj)):
     for j in range(0,len(country_adj)): 
       if ref_matrix[i][j] > 0:
         lang_sim = country_adj[i][j]
+        total += lang_sim*ref_matrix[i][j]
         if lang_sim == 1.0:
           lang_sim = 0.999
         y[int(np.floor(lang_sim/0.05))] += ref_matrix[i][j]
-  return x,y
+
+  return x,y,total/sum(sum(ref_matrix))
 
 # Get total number of refugees in every country
 refugee_nums = np.sum(refugee_adj,axis=1)
@@ -58,18 +64,23 @@ random.shuffle(indices_shuffle)
 refugee_adj_copy[indices] = refugee_adj_copy[indices_shuffle]
 
 # Plot both original historgram and shuffled histogram
-x,y = create_bins(refugee_adj)
-x,y_r = create_bins(refugee_adj_copy)
+x,y,mean = create_bins(refugee_adj)
+x,y_shuff,mean_shuff = create_bins(refugee_adj_copy)
+print('original mean', mean)
+print('shuffled mean', mean_shuff)
+
 
 fig = plt.figure(1)
 plt.xlabel('Language Similarity')
 plt.ylabel('Total refugee count')
-plt.title('Original Data')
+plt.title('Original Data, %s' % year)
+plt.axvline(mean, color='g', linewidth=3)
 plt.bar(x,y,width=-0.05,align='edge',edgecolor='r')
 
 fig = plt.figure(2)
 plt.xlabel('Language Similarity')
 plt.ylabel('Total refugee count')
-plt.title('Shuffled Data')
-plt.bar(x, y_r,width=-0.05,align='edge',edgecolor='r')
+plt.title('Shuffled Data, %s' % year)
+plt.axvline(mean_shuff, color='g', linewidth=3)
+plt.bar(x, y_shuff,width=-0.05,align='edge',edgecolor='r')
 plt.show()
