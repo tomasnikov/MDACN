@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup as Soup, Comment
 import numpy as np
 from numpy import genfromtxt
+from pdb import set_trace
 
 file = open('../Data/supplementalData.xml').read()
 soup = Soup(file, 'lxml')
@@ -89,5 +90,19 @@ for i in range(0, len(refNames)):
         else:
             adjacency[i, j] = 0
 
-print(adjacency)
-np.savetxt("../Data/CountryAdjacency.csv", adjacency, delimiter=',')
+#print(adjacency)
+#np.savetxt("../Data/CountryAdjacency.csv", adjacency, delimiter=',')
+
+#gdpArray=np.zeros((numCountries,1))
+gdpArray=[]
+PopulationArray=[]
+for i in refNames:
+  #set_trace()
+  gdpArray.append([x['gdp'] for x in countries if x['name']==i][0])
+  PopulationArray.append([x['population'] for x in countries if x['name']==i][0])
+
+  
+set_trace()
+
+
+np.savetxt("../Data/Population.csv", PopulationArray, delimiter=',')
