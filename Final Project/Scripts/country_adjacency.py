@@ -1,7 +1,4 @@
-from pdb import set_trace
-from pprint import pprint
 from bs4 import BeautifulSoup as Soup, Comment
-import random
 import numpy as np
 from numpy import genfromtxt
 
@@ -30,18 +27,12 @@ for territory in soup.find_all('territory'):
     countries.append(country)
 
 numCountries = len(countries)
-print('Num countries: ', len(countries))
-print('Random country: ')
-pprint(random.choice(countries))
 
-nodes = [(x['type'],x['name'],i) for i,x in enumerate(countries)]
-linkIndices = []
-linkNames = []
 adjacency = np.zeros((numCountries,numCountries))
 languageSimilarities = genfromtxt('../Data/LanguageSimilarities.csv', delimiter=',')
 with open ('../Data/LanguageNames.csv', 'r') as file:
   languageNames = file.read().splitlines()
-notFoundLanguages = []
+meanLangSim = languageSimilarities.mean()
 
 for i,country in enumerate(countries):
   for j,otherCountry in enumerate(countries):
@@ -51,31 +42,63 @@ for i,country in enumerate(countries):
       for lang1 in country['languages']:
         for lang2 in otherCountry['languages']:
           if lang1['name'] in languageNames and lang2['name'] in languageNames:
-            if (lang1['officialStatus'] == 'official' and lang2['officialStatus'] == 'official') or \
-                    (lang1['officialStatus'] == 'de_facto_official' and lang2['officialStatus'] == 'de_facto_official') or \
-                    (lang1['officialStatus'] == 'official' and lang2['officialStatus'] == 'de_facto_official') or \
-                    (lang1['officialStatus'] == 'de_facto_official' and lang2['officialStatus'] == 'official'):
-
               adjacencyValue = languageSimilarities.item((languageNames.index(lang1['name']),languageNames.index(lang2['name'])))
-              adjacencyValue = adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
-              totalAdjacency += adjacencyValue
-              normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
-      if normalization != 0:
+              totalAdjacency += adjacencyValue * (lang1['percent']/100) * (lang2['percent']/100)
+          else:
+              totalAdjacency += meanLangSim * (lang1['percent']/100) * (lang2['percent']/100)
+          normalization += (lang1['percent'] / 100) * (lang2['percent'] / 100)
+      if normalization > 1:
         totalAdjacency /= normalization
       adjacency[i, j] = totalAdjacency
-      linkIndices.append((i, j))
-      linkNames.append((country['name'], otherCountry['name'], totalAdjacency))
     else:
       adjacency[i, j] = 1
-      linkIndices.append((i, j))
-      linkNames.append((country['name'], otherCountry['name'], 1))
 
-np.savetxt("../Data/CountryAdjacency.csv", adjacency)
 print(adjacency)
 
-print('Num links: ', len(linkNames))
-print('Random link: ', random.choice(linkNames))
-print('Random link: ', random.choice(linkNames))
-print('Random link: ', random.choice(linkNames))
-print('Random link: ', random.choice(linkNames))
-print('Random link: ', random.choice(linkNames))
+with open('../Data/CountryNames.csv', 'r') as file:
+  oldNames = file.read().splitlines()
+
+with open('../Data/RefugeeCountries.csv', 'r') as file:
+  refNames = file.read().splitlines()
+
+indices = [None] * len(refNames)
+
+for i in range(0, len(refNames)):
+    found = False
+    for j in range(0, len(oldNames)):
+        refCountry = refNames[i]
+        oldCountry = oldNames[j]
+        if refNames[i] == oldNames[j]:
+            indices[i] = j
+            found = True
+
+    if not found:
+        print(refNames[i])
+
+print(indices)
+
+oldAdjacency = adjacency
+adjacency = np.zeros((len(refNames),len(refNames)))
+
+for i in range(0, len(refNames)):
+    found = False
+    for j in range(0, len(refNames)):
+        if indices[i] is not None and indices[j] is not None:
+            old = oldAdjacency[indices[i], indices[j]]
+            adjacency[i, j] = old
+        else:
+            adjacency[i, j] = 0
+
+#print(adjacency)
+#np.savetxt("../Data/CountryAdjacency.csv", adjacency, delimiter=',')
+
+#gdpArray=np.zeros((numCountries,1))
+gdpArray=[]
+PopulationArray=[]
+for i in refNames:
+  #set_trace()
+  gdpArray.append([x['gdp'] for x in countries if x['name']==i][0])
+  PopulationArray.append([x['population'] for x in countries if x['name']==i][0])
+
+
+np.savetxt("../Data/Population.csv", PopulationArray, delimiter=',')
