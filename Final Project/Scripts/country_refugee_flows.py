@@ -87,7 +87,7 @@ nx.draw_networkx_nodes(G2, pos, node_color=values, alpha=0.5)
 nx.draw_networkx_labels(G2, pos, labels=country_labels)
 nx.draw_networkx_edges(G2, pos, alpha=0.01)
 plt.axis('off')
-plt.savefig('../images/language_similarity_communities.png', dpi=300)
+plt.savefig('../images/language_similarity_communities.png', dpi=75)
 plt.show()
 
 # plot language similarity graph for individual communities
@@ -109,7 +109,7 @@ for i in range(max(values) + 1):
     nx.draw_networkx_labels(G3, pos)
     nx.draw_networkx_edges(G3, pos, alpha=0.05)
     plt.axis('off')
-    plt.savefig('../images/language_similarity_communities_%d.png' % i, dpi=300, bbox_inches = 'tight')
+    plt.savefig('../images/language_similarity_communities_%d.png' % i, dpi=75, bbox_inches = 'tight')
     plt.show()
 
 # rearrange bipartite positions
@@ -132,5 +132,5 @@ nx.draw_networkx_edges(G, sorted_pos, alpha=0.5, edge_color=list(edge_weights.va
 for _,t in labels.items():
     t.set_rotation(45)
 plt.axis('off')
-plt.savefig('../images/flow_between_countries.png', dpi=300, bbox_inches = 'tight')
+plt.savefig('../images/flow_between_countries.png', dpi=75, bbox_inches = 'tight')
 plt.show()
