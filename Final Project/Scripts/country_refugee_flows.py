@@ -1,10 +1,13 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 import community # https://github.com/taynaud/python-louvain
 
 # parameters
 years = range(1976, 2017) # years to consider [1976, 2017]
+threshold_incoming_labels = 0.1 # do not show label if country does not receive at least 10% of a country's refugees
+threshold_outgoing_labels = 0.01 # do not show label if outgoing refugees do not account for 1% of a country's population
 
 # read country datasets
 country_names = pd.read_csv('../Data/RefugeeCountriesPopulationGDP.csv')
@@ -24,8 +27,26 @@ for i in years:
     refugeeAdjacency = refugeeAdjacency.add(increaseYearMatrix)
 
 # normalize refugees by country population
-refugeeAdjacency = refugeeAdjacency.div(country_names.Population.T, axis=1)
+refugeeAdjacencyNormPop = refugeeAdjacency.div(country_names.Population.T, axis=1)
+refugeeAdjacencyNormPop.fillna(0, inplace=True)
+
+# calculate outgoing and incoming flow for each country and determine if country is a source node
+country_names['Outgoing flow'] = refugeeAdjacency.sum(axis=0)
+country_names['Incoming flow'] = refugeeAdjacency.sum(axis=1)
+country_names.loc[country_names['Outgoing flow'] >= country_names['Incoming flow'], 'Source'] = 1
+country_names.loc[country_names['Outgoing flow'] < country_names['Incoming flow'], 'Source'] = 0
+
+# normalize refugees to indicate the fraction of refugees from origin country that goes to a different country
+refugeeAdjacency = refugeeAdjacency.div(refugeeAdjacency.sum(axis=0), axis=1)
 refugeeAdjacency.fillna(0, inplace=True)
+
+# determine which countries receive a large fraction of refugees from one country
+country_names['Largest incoming fraction'] = refugeeAdjacency.max(axis = 1)
+country_names['Outgoing flow normalized'] = refugeeAdjacencyNormPop.sum(axis = 0)
+country_names['Label'] = country_names.index
+country_names.loc[((country_names['Largest incoming fraction'] <= threshold_incoming_labels) & (country_names['Source'] == 0)) |
+                  ((country_names['Outgoing flow normalized'] < threshold_outgoing_labels) & (country_names['Source'] == 1)), 'Label'] = ''
+country_labels = country_names['Label'].to_dict()
 
 # remove nodes without neighbors in refugees graph
 merged = refugeeAdjacency
@@ -59,28 +80,44 @@ df_community = pd.DataFrame(community_list, columns = ['Country', 'Community'])
 df_community.set_index('Country', inplace=True)
 country_names = country_names.join(df_community)
 
-# calculate outgoing and incoming flow for each country and determine if country is a source node
-country_names['Outgoing flow'] = refugeeAdjacency.sum(axis=0)
-country_names['Incoming flow'] = refugeeAdjacency.sum(axis=1)
-country_names.loc[country_names['Outgoing flow'] >= country_names['Incoming flow'], 'Source'] = 1
-country_names.loc[country_names['Outgoing flow'] < country_names['Incoming flow'], 'Source'] = 0
-country_names.sort_values(['Source', 'Community'], ascending=[False, True], inplace=True)
-
 # plot language similarity graph with communities
 plt.figure(figsize=(15, 15))
 pos = nx.spring_layout(G2, k=1.0)
 nx.draw_networkx_nodes(G2, pos, node_color=values, alpha=0.5)
-nx.draw_networkx_labels(G2, pos)
+nx.draw_networkx_labels(G2, pos, labels=country_labels)
 nx.draw_networkx_edges(G2, pos, alpha=0.01)
 plt.axis('off')
 plt.savefig('../images/language_similarity_communities.png', dpi=300)
 plt.show()
+
+# plot language similarity graph for individual communities
+for i in range(max(values) + 1):
+    countries_in_community_i = country_names.loc[country_names['Community'] == i].index
+    country_adjacency_community_i = country_adjacency.loc[countries_in_community_i]
+    country_adjacency_community_i = country_adjacency_community_i[list(countries_in_community_i)]
+
+    G3 = nx.from_pandas_adjacency(country_adjacency_community_i)
+    print(nx.info(G3))
+    average_degree = [val for (node, val) in G3.degree(weight='weight')]
+    print('Average weighted degree: ', sum(average_degree) / len(G3.nodes))
+    print('')
+
+    plt.figure(figsize=(15, 15))
+    pos = nx.spring_layout(G3)
+    nx.draw_networkx_nodes(G3, pos, node_color=country_names.loc[country_names['Community'] == i].Community.tolist(),
+                           alpha=0.5, cmap=plt.cm.viridis, vmin=0, vmax=max(values))
+    nx.draw_networkx_labels(G3, pos)
+    nx.draw_networkx_edges(G3, pos, alpha=0.05)
+    plt.axis('off')
+    plt.savefig('../images/language_similarity_communities_%d.png' % i, dpi=300, bbox_inches = 'tight')
+    plt.show()
 
 # rearrange bipartite positions
 source_nodes = country_names.loc[country_names['Source'] == 1].index.tolist()
 pos = nx.bipartite_layout(G, source_nodes)
 df_pos = pd.DataFrame.from_dict(pos).T
 df_pos.sort_values([0, 1], ascending=[True, True], inplace=True) # use [True, False] for vertical
+country_names.sort_values(['Source', 'Community'], ascending=[False, True], inplace=True)
 country_names[1] = df_pos[0].values # use country_names[0] for vertical
 country_names[0] = df_pos[1].values # use country_names[1] for vertical
 sorted_pos = country_names[[0, 1]].T.to_dict(orient='list')
@@ -89,23 +126,11 @@ edge_weights = nx.get_edge_attributes(G, 'weight')
 # plot bipartite graph
 plt.figure(figsize=(25, 10))
 nx.draw_networkx_nodes(G, sorted_pos, node_color=country_names.sort_index().Community, alpha=0.5)
-labels = nx.draw_networkx_labels(G, sorted_pos)
-nx.draw_networkx_edges(G, sorted_pos, alpha=1, edge_color=list(edge_weights.values()), edge_cmap=plt.cm.binary,
-                       edge_vmin=0.0, edge_vmax=refugeeAdjacency.values.max())
+labels = nx.draw_networkx_labels(G, sorted_pos, labels=country_labels)
+nx.draw_networkx_edges(G, sorted_pos, alpha=0.5, edge_color=list(edge_weights.values()), edge_cmap=plt.cm.binary,
+                       edge_vmin=0.1, edge_vmax=refugeeAdjacency.values.max())
 for _,t in labels.items():
     t.set_rotation(45)
 plt.axis('off')
-plt.savefig('../images/flow_between_countries.png', dpi=300)
+plt.savefig('../images/flow_between_countries.png', dpi=300, bbox_inches = 'tight')
 plt.show()
-
-# for i in range(max(values) + 1):
-#
-#     plt.figure(figsize=(15,30))
-#     country_names_0 = country_names.loc[(country_names['Community'] == i) | (country_names['Source'] == 0)]
-#     G0 = G.subgraph(country_names_0.index.tolist())
-#     edge_weights = nx.get_edge_attributes(G0, 'weight')
-#     nx.draw_networkx_nodes(G0, sorted_pos, node_color=country_names_0.sort_index().Community, alpha=0.5)
-#     nx.draw_networkx_labels(G0, sorted_pos)
-#     nx.draw_networkx_edges(G0, sorted_pos, alpha=1, edge_color=list(edge_weights.values()), edge_cmap=plt.cm.binary,
-#                            edge_vmin=0.0, edge_vmax=refugeeAdjacency.values.max())
-#     plt.show()
